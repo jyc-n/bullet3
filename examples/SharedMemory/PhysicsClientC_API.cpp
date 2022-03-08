@@ -1549,6 +1549,22 @@ B3_SHARED_API void b3GetMeshDataSetFlags(b3SharedMemoryCommandHandle commandHand
 	}
 }
 
+B3_SHARED_API void b3GetMeshDataSimulationMesh(b3SharedMemoryCommandHandle commandHandle)
+{
+	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
+	b3Assert(command);
+	b3Assert(command->m_type == CMD_REQUEST_MESH_DATA);
+	command->m_updateFlags |= B3_MESH_DATA_SIMULATION_MESH;
+}
+
+B3_SHARED_API void b3MeshDataSimulationMeshVelocity(b3SharedMemoryCommandHandle commandHandle)
+{
+	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
+	b3Assert(command);
+	b3Assert(command->m_type == CMD_REQUEST_MESH_DATA || command->m_type == CMD_RESET_MESH_DATA);
+	command->m_updateFlags |= B3_MESH_DATA_SIMULATION_MESH_VELOCITY;
+}
+
 B3_SHARED_API void b3GetMeshData(b3PhysicsClientHandle physClient, struct b3MeshData* meshData)
 {
 	PhysicsClient* cl = (PhysicsClient*)physClient;
@@ -4173,6 +4189,44 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3InitUserDebugDrawAddLine3D(b3Physics
 	command->m_userDebugDrawArgs.m_parentObjectUniqueId = -1;
 	command->m_userDebugDrawArgs.m_parentLinkIndex = -1;
 	command->m_userDebugDrawArgs.m_optionFlags = 0;
+
+	return (b3SharedMemoryCommandHandle)command;
+}
+B3_SHARED_API b3SharedMemoryCommandHandle b3InitUserDebugDrawAddPoints3D(b3PhysicsClientHandle physClient, const double positionsXYZ[/*3n*/], const double colorsRGB[/*3n*/], const double pointSize, const double lifeTime, const int pointNum)
+{
+	PhysicsClient* cl = (PhysicsClient*)physClient;
+	b3Assert(cl);
+	b3Assert(cl->canSubmitCommand());
+	struct SharedMemoryCommand* command = cl->getAvailableSharedMemoryCommand();
+	b3Assert(command);
+	command->m_type = CMD_USER_DEBUG_DRAW;
+	command->m_updateFlags = USER_DEBUG_HAS_POINTS;
+
+	command->m_userDebugDrawArgs.m_debugPointNum = pointNum;
+	command->m_userDebugDrawArgs.m_pointSize = pointSize;
+	command->m_userDebugDrawArgs.m_lifeTime = lifeTime;
+	command->m_userDebugDrawArgs.m_parentObjectUniqueId = -1;
+	command->m_userDebugDrawArgs.m_parentLinkIndex = -1;
+	command->m_userDebugDrawArgs.m_optionFlags = 0;
+
+	int totalUploadSizeInBytes = pointNum * sizeof(double) * 3 * 2;
+	char* data = new char[totalUploadSizeInBytes];
+	double* pointPositionsUpload = (double*) data;
+	double* pointColorsUpload = (double*)(data + pointNum * sizeof(double) * 3);
+	for (int i = 0; i < pointNum; i++)
+	{
+		pointPositionsUpload[i * 3 + 0] = positionsXYZ[i * 3 + 0];
+		pointPositionsUpload[i * 3 + 1] = positionsXYZ[i * 3 + 1];
+		pointPositionsUpload[i * 3 + 2] = positionsXYZ[i * 3 + 2];
+	}
+	for (int i = 0; i < pointNum; i++)
+	{
+		pointColorsUpload[i * 3 + 0] = colorsRGB[i * 3 + 0];
+		pointColorsUpload[i * 3 + 1] = colorsRGB[i * 3 + 1];
+		pointColorsUpload[i * 3 + 2] = colorsRGB[i * 3 + 2];
+	}
+	cl->uploadBulletFileToSharedMemory(data, totalUploadSizeInBytes);
+	delete[] data;
 
 	return (b3SharedMemoryCommandHandle)command;
 }

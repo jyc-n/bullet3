@@ -298,7 +298,7 @@ public:
 	};
 	struct RenderFace
 	{
-		RenderNode* m_n[3];          // Node pointers
+		RenderNode* m_n[3];  // Node pointers
 	};
 
 	/* Face			*/
@@ -407,6 +407,7 @@ public:
 		btScalar m_friction;  // Friction
 		btScalar m_imf;       // inverse mass of the face at contact point
 		btScalar m_c0;        // scale of the impulse matrix;
+		const btCollisionObject* m_colObj;  // Collision object to collide with.
 	};
 
 	/* SContact		*/
@@ -786,7 +787,7 @@ public:
 	typedef btAlignedObjectArray<Cluster*> tClusterArray;
 	typedef btAlignedObjectArray<Note> tNoteArray;
 	typedef btAlignedObjectArray<Node> tNodeArray;
-	typedef btAlignedObjectArray< RenderNode> tRenderNodeArray;
+	typedef btAlignedObjectArray<RenderNode> tRenderNodeArray;
 	typedef btAlignedObjectArray<btDbvtNode*> tLeafArray;
 	typedef btAlignedObjectArray<Link> tLinkArray;
 	typedef btAlignedObjectArray<Face> tFaceArray;
@@ -814,7 +815,7 @@ public:
 	tRenderNodeArray m_renderNodes;    // Render Nodes
 	tLinkArray m_links;                // Links
 	tFaceArray m_faces;                // Faces
-	tRenderFaceArray m_renderFaces;          // Faces
+	tRenderFaceArray m_renderFaces;    // Faces
 	tTetraArray m_tetras;              // Tetras
 	btAlignedObjectArray<TetraScratch> m_tetraScratches;
 	btAlignedObjectArray<TetraScratch> m_tetraScratchesTn;
@@ -824,6 +825,7 @@ public:
 	btAlignedObjectArray<DeformableNodeRigidContact> m_nodeRigidContacts;
 	btAlignedObjectArray<DeformableFaceNodeContact> m_faceNodeContacts;
 	btAlignedObjectArray<DeformableFaceRigidContact> m_faceRigidContacts;
+	btAlignedObjectArray<DeformableFaceNodeContact> m_faceNodeContactsCCD;
 	tSContactArray m_scontacts;     // Soft contacts
 	tJointArray m_joints;           // Joints
 	tMaterialArray m_materials;     // Materials
@@ -1054,6 +1056,9 @@ public:
 								   Material* mat = 0);
 	/* Randomize constraints to reduce solver bias							*/
 	void randomizeConstraints();
+
+	void updateState(const btAlignedObjectArray<btVector3>& qs, const btAlignedObjectArray<btVector3>& vs);
+
 	/* Release clusters														*/
 	void releaseCluster(int index);
 	void releaseClusters();
