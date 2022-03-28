@@ -16,6 +16,7 @@
 #include "btDeformableMultiBodyConstraintSolver.h"
 #include "BulletReducedDeformableBody/btReducedDeformableBodySolver.h"
 #include <iostream>
+
 // override the iterations method to include deformable/multibody contact
 btScalar btDeformableMultiBodyConstraintSolver::solveDeformableGroupIterations(btCollisionObject** bodies, int numBodies, btCollisionObject** deformableBodies, int numDeformableBodies, btPersistentManifold** manifoldPtr, int numManifolds, btTypedConstraint** constraints, int numConstraints, const btContactSolverInfo& infoGlobal, btIDebugDraw* debugDrawer)
 {
